@@ -14,8 +14,12 @@ from the owner's `coderabbit` repository.
 - Only `@coderabbitai/config`, relative imports and `includeRemote` may be
   imported — CodeRabbit evaluates the files in a sandbox without npm
   packages or network access.
+- `base.ts` must keep `inheritance: true`. Without it the central file
+  replaces the CodeRabbit web-UI settings wholesale and every value it
+  does not set drops to the schema default, in every repository.
 - A change here alters review behaviour in every inheriting repository
   and outranks their web-UI settings. Record each shared setting and its
   reason in the README table.
 - Verify a change on a real pull request with `@coderabbitai configuration`
-  before relying on it.
+  before relying on it: the dashboard values must still show their
+  `Organization UI` source.

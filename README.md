@@ -9,39 +9,41 @@ CodeRabbit reads a repository named `coderabbit` on the account as
 [central configuration](https://docs.coderabbit.ai/configuration/central-configuration):
 
 - A repository **without** its own `.coderabbit.yaml` or
-  `.coderabbit.config.ts` inherits `.coderabbit.config.ts` from here.
+  `.coderabbit.config.ts` uses `.coderabbit.config.ts` from here.
 - A repository **with** its own file uses that file instead. To keep the
-  shared settings, it includes `base.ts` explicitly and adds to it:
-
-  ```ts
-  import { defineConfig, mergeConfig, includeRemote } from "@coderabbitai/config"
-
-  export default defineConfig(
-    mergeConfig(
-      includeRemote({ path: "base.ts" }),
-      { reviews: { /* repository-specific settings */ } },
-    ),
-  )
-  ```
-
-- `includeRemote` always reads from the owner's own `coderabbit`
-  repository — the source repository is not configurable
-  (`@coderabbitai/config` 0.1.0) — so this covers `frostney` repositories
-  only. Another account or organisation (e.g. `signalovernoise-ai`) needs
-  its own `coderabbit` repository.
+  shared settings, it sets `inheritance: true` (YAML or TypeScript), which
+  falls through to this repository for every value it does not set.
 - A committed `.coderabbit.yaml` beats a `.coderabbit.config.ts` in the
-  same repository; a repository that wants the shared base converts its
-  YAML to TypeScript.
+  same repository.
 
-Precedence, highest first: global overrides, the repository's file, this
-central repository, repository UI settings, organisation UI settings,
-workspace settings, schema defaults. Central configuration therefore
-overrides settings made in the CodeRabbit web UI for a repository.
+### Inheritance
+
+A CodeRabbit file **replaces** every lower-priority source unless it sets
+[`inheritance: true`](https://docs.coderabbit.ai/configuration/configuration-inheritance).
+Without it, a file sends every value it does not mention back to the
+schema default — including everything configured in the CodeRabbit web
+UI. `base.ts` therefore sets `inheritance: true`: the values here win and
+the rest falls through to the UI settings, then the defaults. Objects
+merge deeply, scalars from the higher level win, and arrays list the
+higher level's items first.
+
+Precedence, highest first: the repository's file, this central
+repository, repository UI settings, organisation UI settings, schema
+defaults. Each level passes on to the next only if it sets
+`inheritance: true`.
+
+`includeRemote({ path: "base.ts" })` from `@coderabbitai/config` is the
+alternative for a repository that wants the shared fragment without
+inheriting: it always reads from the owner's own `coderabbit`
+repository (`@coderabbitai/config` 0.1.0), so it covers `frostney`
+repositories only. Another account or organisation (e.g.
+`signalovernoise-ai`) needs its own `coderabbit` repository.
 
 ## What is shared
 
 | Setting | Value | Why |
 | --- | --- | --- |
+| `inheritance` | `true` | Keeps the CodeRabbit web-UI settings in force; see [Inheritance](#inheritance). |
 | `reviews.auto_review.base_branches` | `[".*"]` | Stacked pull requests target the layer below them; without this, CodeRabbit reviews only pull requests into the default branch. |
 
 ## Checking the resolved configuration

@@ -1,8 +1,9 @@
 // Shared CodeRabbit settings for frostney repositories.
 //
-// Every repository without its own CodeRabbit file inherits this through
-// the central `.coderabbit.config.ts` beside it. A repository that keeps
-// its own policy pulls it in explicitly and adds to it:
+// Every repository without its own CodeRabbit file uses this through the
+// central `.coderabbit.config.ts` beside it. A repository with its own file
+// falls through to it by setting `inheritance: true`; to take the fragment
+// without inheriting, it can include it explicitly instead:
 //
 //   import { defineConfig, mergeConfig, includeRemote } from "@coderabbitai/config"
 //
@@ -19,6 +20,12 @@
 // or organisation needs its own `coderabbit` repository. mergeConfig merges
 // objects recursively, concatenates arrays and lets the later scalar win.
 export default {
+  // A CodeRabbit file replaces the lower-priority sources wholesale unless
+  // it opts into inheritance: without this, the central configuration
+  // would drop every setting made in the CodeRabbit web UI back to the
+  // schema default. With it, values set here win and everything else falls
+  // through to the UI settings (and then the defaults).
+  inheritance: true,
   reviews: {
     auto_review: {
       // Stacked pull requests target the layer below them, not the default

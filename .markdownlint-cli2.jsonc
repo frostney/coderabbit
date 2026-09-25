@@ -1,0 +1,7 @@
+// markdownlint-cli2 config, matching the other frostney repositories:
+// tables and long-form prose are not wrapped.
+{
+  "config": {
+    "MD013": false
+  }
+}

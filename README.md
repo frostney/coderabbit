@@ -46,6 +46,37 @@ repositories only. Another account or organisation (e.g.
 | `inheritance` | `true` | Keeps the CodeRabbit web-UI settings in force; see [Inheritance](#inheritance). |
 | `reviews.auto_review.base_branches` | `[".*"]` | Stacked pull requests target the layer below them; without this, CodeRabbit reviews only pull requests into the default branch. |
 
+## Shared functions
+
+`lib/` holds functions for repository configs, apart from the shared data in
+`base.ts`. A repository config loads them with `includeRemote`, which
+passes a module's exports through at runtime even though its type says
+config object; a repository config cannot import this repository any other
+way (bare imports are rejected).
+
+| Function | File | Use |
+| --- | --- | --- |
+| `excludeVendoredSkills(lock)` | `lib/skills.ts` | Excludes every skill listed in the repository's `skills-lock.json` (vendored by the skills CLI) from review; project-authored skills under `.agents/skills` stay reviewed. Keeps `inheritance: true`. |
+
+A repository that vendors skills carries this `.coderabbit.config.ts`:
+
+```ts
+import { defineConfig, includeRemote } from "@coderabbitai/config"
+import lock from "./skills-lock.yaml"
+
+const { excludeVendoredSkills } = includeRemote({
+  path: "lib/skills.ts",
+}) as unknown as { excludeVendoredSkills(lock: unknown): object }
+
+export default defineConfig(excludeVendoredSkills(lock))
+```
+
+plus `skills-lock.yaml`, a symlink to `skills-lock.json`
+(`ln -s skills-lock.json skills-lock.yaml`). Only a file inside the
+reviewed repository can read its lock, and CodeRabbit's config sandbox
+imports `.yaml` but not `.json` (with or without an import attribute); JSON
+is valid YAML.
+
 ## Checking the resolved configuration
 
 Comment `@coderabbitai configuration` on a pull request in any repository:
